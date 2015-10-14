@@ -1,0 +1,112 @@
+
+<!-- 
+* @author:Anyun Li
+* Supported Type:
+* "m_s" : multiply choice
+* "t_f" : true or false
+* "m_m" : multiply choice whith multiply correct answers
+* "match": drag-drop match 
+-->
+
+<exam>
+	<!--
+	"img" this field is optional, if it appear, the page will display this image with this question 
+	"question" put your question here
+	"option" put your answer here, use attribute "correct" to set if this option is correct answer
+	-->
+	<item id='0' type="m_s" >
+		<img src="oven.png"></img>
+		<question>What is eContent?</question>
+		<option correct = "false">Cat videos on YouTube</option>
+		<option correct = "true">Any web hosted learning material, reference material and supporting documents</option>
+		<option correct = "false">A profile on Facebook</option>
+		<option correct = "false">The ingredients that make up an energy drink</option>
+	</item>
+	<!-- 
+	"img" this field is optional, if it appear, the page will display this image with this question	
+	"question" put your question here
+	"option" put your answer here, use attribute "correct" to set if this option is correct answer
+	-->
+	<item id='1' type="t_f" >
+		<question>Is the page responsive ready?</question>
+		<option correct = "true">True</option>
+		<option correct = "false">False</option>
+	</item>
+	<item id='2' type="t_f" >
+		<question>You can retake Pop Quiz questions?</question>
+		<option correct = "false">True</option>
+		<option correct = "true">False</option>
+	</item>
+	<item id='3' type="m_s" >
+		<question>The __________ lets users see where parts can be found on a product.</question>
+		<option correct = "false">Sequence of Operation</option>
+		<option correct = "false">Introduction</option>
+		<option correct = "true">Parts Identification</option>
+		<option correct = "false">None of the Above</option>
+	</item>
+	<item id='4' type="m_s" >
+		<question>When can users review their exam answers?</question>
+		<option correct = "false">While taking the exam</option>
+		<option correct = "false">After the exam has been scored</option>
+		<option correct = "false">After you have completed all the questions</option>
+		<option correct = "true">All of the Above</option>
+	</item>
+	<item id='5' type="t_f" >
+		<img src="oven.png"></img>
+		<question>Ignitor Labs has a system in place for our clients to track the development progress of their eContent.</question>
+		<option correct = "true">True</option>
+		<option correct = "false">False</option>
+	</item>
+	<!-- 
+	"img" this field is optional, if it appear, the page will display this image with this question	
+	"question" put your question here
+	"option" put your answer here, use attribute "correct" to set if this option is correct answer
+	-->
+	<item id='6' type="m_m" >
+		<!--<img src="oven.png"></img>-->
+		<question>The 3D department of Ignitor Labs accepts which of the following file types as geometry source files?</question>
+		<option correct = "true">ProE</option>
+		<option correct = "true">Revit</option>
+		<option correct = "true">Inventor</option>
+		<option correct = "true">IGES (Last Resort)</option>
+		<option correct = "true">3DSMax</option>
+	</item>
+	<item id='7' type="m_m" >
+		<!--<img src="oven.png"></img>-->
+		<question>What can be earned by taking and completing an online course from Ignitor Labs?</question>
+		<option correct = "false">A new Car, Truck or SUV</option>
+		<option correct = "true">Product specific knowledge and technical know-how</option>
+		<option correct = "true">A coupon which can be used to purchase new courses</option>
+		<option correct = "true">Fundamental knowledge of a product prior to hands on training</option>
+	</item>
+	<!-- 
+	"question" put your question here
+	"answer" this is used to create answer field. (How many fileds this question needs to fill.)
+			"correct" attribute store the id of the correct options. 
+			If the "sequence_matters" is true, the order of the id in the "answer" controlls the correct sequence.	
+			"src" optional if provides, a picture will display above the box
+	"option" put your answer options here, 
+	-->
+	<item id='8' type="match" sequence_matters="false">
+		<question>What devices can the exam be viewed on?</question>
+		<answer correct="3"></answer>
+		<answer correct="4"></answer>
+		<answer correct="5"></answer>
+		<option width="100" height="100" id = "1" src="watch.jpg">Watch</option>
+		<option width="100" height="100" id = "2" src="tv.jpg">TV</option>
+		<option width="100" height="100" id = "3" src="computer.jpg">Computer</option>
+		<option width="100" height="100" id = "4" src="phone.jpg">Phone</option>
+		<option width="100" height="100" id = "4" src="tablet.jpg">Tablet</option>
+	</item>
+	<item id='9' type="match" sequence_matters="true">
+		<question>Drag the departments to their role in content creation.</question>
+		<answer src="3D.png" correct="4"></answer>
+		<answer src="animation.png" correct="1"></answer>
+		<answer src="development.png" correct="2"></answer>
+		<answer src="instructional.png" correct="3"></answer>
+		<option width="150" height="43" id = "1" src="s2.png"></option>
+		<option width="150" height="43" id = "2" src="s3.png"></option>
+		<option width="150" height="43" id = "3" src="s4.png"></option>
+		<option width="150" height="43" id = "4" src="s1.png"></option>
+	</item>
+</exam>

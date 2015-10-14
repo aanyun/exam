@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+  	<head>
+  		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+		<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+		<script src="http://code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+		<script src="js/bootstrap.min.js"></script>
+		<link rel="stylesheet" href="css/index.css">
+	</head>
+	<body>
+		<!--Header -->
+		<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+		  <div class="container">
+		  	<div class="navbar-brand">Final Exam</div>			
+			<button type="button" class="btn btn-default navbar-btn footer submit pull-right" style="display:none" onclick="summary()">Exam Summary</button>
+		  </div>
+		</nav>
+
+		<!--Loading page -->
+		<div class="loading" style="display:none;margin:auto;margin-top:50px;">
+			<center>Loading...</center>
+		</div>
+
+		<!-- Agreement Page -->
+		<div class="agree" style="margin-top:50px;">
+			<h4 style="font-weight:bold;color:red" class="text-center">IMPORTANT - Please read before proceeding</h4>
+			<ul class="instruction">
+				<li>Answer each question at the time it appears on the screen.  Use the arrow buttons on the sides of the screen to navigate through the questions.</li>
+				<li>You will be able to review or change your answers before submitting your exam for a grade.  After receiving a grade you will not be able to change your answers.</li>
+				<li>Some questions may have more than one correct answer.</li>
+				<li>If you exit the exam before you have submitted it for a grade, your answers will not be saved.</li>
+				<li>When you enter back into the exam, you will be directed to restart the Final Exam.</li>
+			</ul>
+			<center>
+				<button class="btn btn-success" onclick="agree()">Agree and Continue</button>
+			</center>
+		</div>
+		
+		<!-- Exam Summary Page-->
+		<div class="summary" style="display:none;margin-top:50px;">
+			<p><img src='img/sq_grey.gif'/> <b>Unanswered Question</b> <img src='img/sq_green.gif' style="margin-left:15px"/> <b>Answered Question</b></p>
+			<div class="panel panel-default">
+			  <div class="panel-body">
+			    <table class="questions">
+			    </table>
+			  </div>
+			</div>
+			<div class="summary_text">
+			<p>You have: <span class="unanswered_num"></span> unanswered question(s).</p>
+			<p>Please review the status of each question from the above list. Click the "View" button next to the listed question to answer the unanswered question or change your answers.</p>
+			</div>
+			<button class="btn btn-default pull-left" onclick="back()">Go Back</button>
+			<button class="btn btn-default pull-right submit" onclick="score()">Grade Exam</button>
+			
+		</div>
+
+		<!-- Score Page -->
+		<div class="score" style="display:none;margin-top:50px;">
+			<p><img src='img/sq_green.gif'/> <b>Correct</b> <img src='img/sq_red.png' style="margin-left:15px"/> <b>Incorrect</b></p>
+			<div class="panel panel-default">
+			  <div class="panel-body">
+			    <table class="complete_questions">
+			    </table>
+			  </div>
+			</div>
+			<div class="summary_text">
+			<h4>You have Completed the Final Exam.</h4>
+			<p>Your Final Exam Score is :<span class="final_score"></span></p>
+			<p>You got: <span class="correct_num"></span> of <span class="total_num"></span> correct.</p>
+			</div>
+			
+			<center>
+				<button type="button" class="submit btn btn-default" onclick="window.location.reload()">Retake Final Exam</button>
+			</center>
+			
+		</div>
+
+
+		<!-- Question Page -->
+		<div class="exam-area footer" style="margin-top:35px;display:none">
+			<div class="exam-nav table-cell"> 
+				<a class="pre" autocomplete="off"  href="javascript:pre()" style="outline:0">
+					<span class="glyphicon glyphicon-circle-arrow-left"></span>
+				</a>
+			</div>
+			<div class="question-area table-cell">
+				<div class="qdes"></div>
+				<div class="des"></div>
+				<iframe id="iframe" width="100%" style="overflow:hidden;height:100%;width:100%" frameBorder="0" scrolling="no" seamless="seamless">
+				</iframe>
+			</div>
+			<div class="exam-nav table-cell">
+				<a class="next" autocomplete="off"  href="javascript:next()" style="outline:0">
+					<span class="glyphicon glyphicon-circle-arrow-right"></span>
+				</a>
+			</div>
+		</div>
+
+
+		<!-- Alert Page -->
+		<div class="modal fade">
+		  <div class="modal-dialog">
+		    <div class="modal-content">
+		      <div class="modal-body">
+		        <p>You have <span class="unanswered_num"></span> unanswered question(s). Do you want to proceed anyway?</p>
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+		        <button type="button" class="btn btn-primary" onclick="score(1)">Yes</button>
+		      </div>
+		    </div><!-- /.modal-content -->
+		  </div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+
+
+	</body>	
+	<script>
+		var id = 0;
+		var current = 0;
+		var amount = 0;
+		var exam = [];
+		var agreeSigned = false;
+		var done = false;
+		var unanswered_num;
+		//init
+		$.ajax({
+		    type: "GET",
+		    url: "exam.xml",
+		    dataType: "xml",
+		    success: function (xml) {
+				$items = $(xml).find( "item" );  //or random get 
+				amount = $items.length;	
+				unanswered_num = amount;
+
+				$items.each(function(i,v){
+					var question = {
+						type:$(v).attr('type'),
+						sequence_matters:$(v).attr('sequence_matters'),
+						answer_id:[],
+						correct_id:[],
+						id:$(v).attr('id'),
+						question:$(v).find('question').text() 
+					};
+					exam[$(v).attr('id')] = question;
+					//console.log(exam); 
+				});
+				//$('iframe').attr('src',"m_s.html?index=0&id="+id);
+		    }
+		});
+
+		$('iframe').load(function() {
+		    setTimeout(iResize, 150);
+		});
+		$( window ).resize(function() {
+			setTimeout(iResize, 50);
+		});
+		function iResize() {
+		    document.getElementById('iframe').style.height = 
+		    document.getElementById('iframe').contentWindow.document.body.offsetHeight + 'px';
+		}
+		function pre(){
+			// $('.summary').hide();
+			// $('iframe').show();
+
+			
+			// $('.next').prop('disabled',false);
+			if (current == 0) { //first page
+				return;
+			}
+			current = current -1;
+			goTo(current);
+			// var type = exam[current].type;
+			// if (type == 'm_m') type = "m_s";
+			// $('iframe').attr('src',type+".html?id="+current+"&index="+current+"&a_id="+exam[current].answer_id.join());
+			// if (current == 0) { //on first page
+			// 	$('.pre').prop('disabled',true);
+			// 	return;
+			// }
+		}
+		function resetNav(){
+			if (current == 0) { //on first page
+				$('.pre').prop('disabled',true);
+				$('.next').prop('disabled',false);
+				return;
+			} else if (current == amount-1) { //on last page
+				// $('.submit').show();
+				// $('.next').prop('disabled',true);
+				$('.pre').prop('disabled',false);
+				// return;
+			} else {
+				$('.pre').prop('disabled',false);
+				$('.next').prop('disabled',false);
+			}
+		}
+		function next(){
+			// $('.summary').hide();
+			// $('iframe').show();
+
+			// $('.pre').prop('disabled',false);
+			if (current == amount-1) { //last page
+				summary();
+				return;
+			}
+			current = current + 1;
+			goTo(current);
+			// var type = exam[current].type;
+			// if (type == 'm_m') type = "m_s";
+
+			// $('iframe').attr('src',type+".html?id="+current+"&index="+current+"&a_id="+exam[current].answer_id.join());
+			// if (current == amount-1) { //on last page
+			// 	$('.submit').show();
+			// 	$('.next').prop('disabled',true);
+			// 	return;
+			// }
+		}
+
+		function score(flag){
+			//alert(flag);
+			if (unanswered_num>0&&flag==null) {
+				$('.modal').modal('show');
+				return;
+			}
+			$('.modal').modal('hide');
+			var score = 0;
+			var list = "";
+
+			$(exam).each(function(i,v){
+				arr1 = v.answer_id;
+				arr2 = v.correct_id;
+				var correct = "";
+				if((v.type=='match'||v.type=='interactive')&&v.sequence_matters=='true') {
+					if(arraysEqual(arr1,arr2)&&arr1.length>0) {
+						score++;
+						correct="correct";
+					}
+				} else {
+					if ($(arr1).not(arr2).length == 0 && $(arr2).not(arr1).length == 0 && arr2.length != 0) {
+						score++;
+						correct="correct";
+					}
+				}
+
+				list = list + "<tr>"+
+				"<td class='icon "+correct+"'></td>"+
+				"<td class='qcontent'> Q"+(i+1)+": "+ v.question +"</td>"+
+				"<td><button class='btn btn-xs btn-info' onclick='goTo("+i+",false)' >VIEW</button></td>"+
+				"</tr>";
+			});
+			$('.complete_questions').html(list);
+			$('.correct_num').html(score);
+			$('.total_num').html(amount);
+			//alert("Your score: "+score+" /"+amount);
+			$('.final_score').html(score);
+			$('.score').show();
+			$('.summary').hide();
+			done = true;
+		}
+		function arraysEqual(a, b) {
+		  if (a === b) return true;
+		  if (a == null || b == null) return false;
+		  if (a.length != b.length) return false;
+
+		  // If you don't care about the order of the elements inside
+		  // the array, you should sort both arrays here.
+
+		  for (var i = 0; i < a.length; ++i) {
+		    if (a[i] !== b[i]) return false;
+		  }
+		  return true;
+		}
+		function summary(){
+			if(done) {
+				$('iframe').hide();
+				$('.footer').hide();
+				score(1);
+				return;
+			}
+			//change title
+			$('.navbar-text').find('.text').html("Exam Summary");
+			$('.des').html('');
+			
+			console.log(exam);
+			
+			var list = '';
+			var answered_num = 0;
+			$(exam).each(function(i,v){
+				answered = "";
+				if(v.answer_id.length >0&&v.answer_id[0].toString().length> 0) {
+					answered = "answered";
+					answered_num++;
+				}
+				list = list + "<tr><td class='"+answered+"'></td>"+
+				"<td class='qcontent'> Q"+(i+1)+": "+ v.question +"</td>"+
+				"<td><button class='btn btn-xs btn-info' onclick='goTo("+i+")' >VIEW</td>"+
+				"</tr>";
+			});
+			$('.questions').html(list);
+			$('.summary').slideDown();
+			$('iframe').hide();
+			$('.footer').hide();
+			unanswered_num = amount-answered_num;
+			$('.unanswered_num').html(amount-answered_num);
+		}
+		function back(){
+			$('.summary').slideUp('slow','swing',function(){
+				$('iframe').show();
+				$('.navbar-text').find('.text').html("Question "+(current+1)+" of "+amount);
+				$('.des').html(getTypeDes(current));
+				$('.footer').show();
+			});
+		}
+		function agree(){
+			agreeSigned = true;
+			$('.agree').slideUp('slow','swing',function(){
+				//$('iframe').show();
+				$('.footer').show();
+				goTo(0);
+			});
+			
+		}
+		function goTo(index){
+			//alert('');
+			$('.qdes').html("Question "+(index+1)+" of "+amount);
+			current = index;
+			var type = exam[current].type;
+			var disabled = "false";
+			if(done){
+				var disabled = 'true';
+			}
+			if (type == 'm_m' || type == 't_f') type = "m_s";
+			src = type+".html?disable="+disabled+"&id="+exam[index].id+"&index="+index+"&a_id="+exam[index].answer_id.join();
+			$('iframe').hide();
+			$('iframe').attr('src',src);
+			if ($('.summary').is(":visible")) {
+				$('.summary').slideUp('fast','swing',function(){
+				});
+			} else {
+
+			}
+
+			displayLoading();
+			resetNav();
+			$('.des').html(getTypeDes(index));
+			$('.footer').hide();
+		}
+		function getTypeDes(index){
+			if (exam[index].type == 't_f') var type="True or False";
+			else if (exam[index].type == 'm_s') var type="Select the best answer";
+			else if (exam[index].type == 'm_m') var type="Click on all that apply";
+			else type = "Drag and drop";
+			return type;
+		}
+		function displayLoading(){
+			$('.loading').show();
+		}
+		function showiframe(){
+			if (agreeSigned){
+				$('body').children('div').hide();
+				$('iframe').show();
+				$('.iframe').show();
+				$('.footer').show();
+			}
+		}
+		function jumpOut(){
+			parent.loadExamResult();
+		}
+  	</script>
+</html>

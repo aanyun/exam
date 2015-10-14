@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+  	<head>
+  		<meta name="viewport" content="width=device-width, initial-scale=1">
+  		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+  		<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+  		<script src="http://code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+  		<style>
+  		html,body{
+			background-color: #f6f6f6;
+		}
+  		body{
+  			padding:20px;
+  		}
+  		.question{
+  			font-size:20px;
+  			margin-bottom: 15px;
+  		}
+  		.option input:hover,.option label:hover{
+  			cursor:pointer;
+  		}
+  		.space,.draggable{
+  			display: inline-block;
+  			margin-right: 10px;
+  		}
+  		.answers {
+  			margin-bottom: 50px;
+  		}
+  		.droppable{
+  			display:inline-block;
+  			background-color: #C9C9C9;
+  			margin-right: 10px;
+  			margin-bottom:10px;
+  			border:1px solid #7A7A7A;
+  			-moz-box-shadow:    inset 0 0 10px #7A7A7A;
+   			-webkit-box-shadow: inset 0 0 10px #7A7A7A;
+   			box-shadow: inset 0 0 10px #7A7A7A;
+  		}
+  		</style>
+	</head>
+	<body>
+		<div class="question"></div>
+		    <div class="answers">
+		    
+			</div>
+			<div class="options" style="min-width:400px">
+		    
+		  	</div>
+
+
+	</body>	
+	<script>
+
+	    $( "#draggable" ).draggable({
+	    	cursor: "move"
+	    });
+
+
+
+		function parse(val) {
+		    var result = null,
+		        tmp = [];
+		    var items = location.search.substr(1).split("&");
+		    for (var index = 0; index < items.length; index++) {
+		        tmp = items[index].split("=");
+		        if (tmp[0] === val) result = decodeURIComponent(tmp[1]);
+		    }
+		    return result;
+		}
+		var disabled = parse('disable');
+
+		var id = parse('id');  // question data
+		var a_id = ""+parse('a_id');  //user's answer
+		var index = parseInt(parse('index'))+1;
+		var type;
+		parent.exam[id].correct_id = [];
+  			$.ajax({
+			    type: "GET",
+			    url: "exam.xml",
+			    dataType: "xml",
+			    success: function (xml) {
+					$item = $(xml).find( "item[id='"+id+"']" );	
+					type = $item.attr('type');        
+			        $('.question').html(index + ". "+ $item.find('question').text());
+			    // draggable area 
+			        $options = $item.find( "option" );
+			        
+			        $options.each(function(i,v){
+			        	var option = "<img id = '"+$(v).attr('id')+"' class='draggable' width='"+$(v).attr('width')+"' src='img/"+$(v).attr('src')+"'>";
+			        	$('.options').append(option);
+			        	width = $(v).attr('width');
+			        	height = $(v).attr('height');
+			        });
+
+			        
+		    	    $( ".draggable" ).draggable({
+				    	cursor: "move",
+				    	revert: "invalid",
+				    	create: function(){$(this).data('position',$(this).position())},
+				    	start:function(){$(this).stop(true,true)}
+				    });
+
+
+			    	//droppable area
+			    	$answers =  $item.find( "answer" ); 
+			    	 if (parent.exam[id].answer_id.length==0&&parent.exam[id].sequence_matters == "true") {
+			    	 	
+			    	 	for(var i = 0;i<$answers.length;i++){
+			    	 		parent.exam[id].answer_id.push("");
+			    	 	}
+			    	 	
+			    	 }
+
+			    	//console.log($answers.length);
+			    	$answers.each(function(i,v){
+			    		if( $(v).attr('src') != null && $(v).attr('src') != ""){
+			    			var answer = "<div class='space'>"+
+			    							"<div>"+
+			    								"<img width='"+width+"' src='img/"+$(v).attr('src')+"' >"+
+			    							"</div>"+
+			    							"<div style='width:"+(parseInt(width)+5)+"px;height:"+(parseInt(height)+5)+"px' class='droppable'>&nbsp;</div>"+
+			    						"</div>";
+			    		} else 
+			        		var answer = "<div style='width:"+(parseInt(width)+5)+"px;height:"+(parseInt(height)+5)+"px' class='droppable'>&nbsp;</div>";
+			        	$('.answers').append(answer);
+			        	parent.exam[id].correct_id.push(parseInt($(v).attr('correct')));
+			        });	
+
+			        $( ".droppable" ).droppable({
+				    	accept: '.draggable',
+				    	over: function( event, ui ) {
+				    		$(this).css('border','1px solid red');
+				    	},
+				    	out: function( event, ui ) {
+				    		$(this).css('border','');
+							ui.draggable.data("uiDraggable").originalPosition = {
+				                top : 0,
+				                left : 0
+				            };
+				            var currentDraggable = $(ui.draggable).attr('id');
+				            if ($(this).attr('pastDraggable') != ""&&currentDraggable == $(this).attr('pastDraggable')) {
+								
+			                	pastDraggable = $(this).attr('pastDraggable');
+			                	if (parent.exam[id].sequence_matters == "true") {
+									var index = $( ".droppable" ).index($(this));
+										parent.exam[id].answer_id = $.map( parent.exam[id].answer_id, function( val, i ) {
+									    	if(i == index) return "";
+									    	else return val;
+										});									
+				                } else {
+				                	parent.exam[id].answer_id=jQuery.grep(parent.exam[id].answer_id, function(value) {
+										  return value != pastDraggable;
+										});
+				                }
+
+			        		$(this).attr('pastDraggable','');
+			                }
+				    		
+				    	},
+				    	drop:function( event, ui ) {
+				    		
+				    		$(this).css('border','');
+				    		
+
+				    		snapToMiddle(ui.draggable,$(this));
+				    		var currentDraggable = $(ui.draggable).attr('id');
+				    		
+               				 //If there is an object prior to the current one
+			                if ($(this).attr('pastDraggable') != ""&&$(this).attr('pastDraggable') != currentDraggable) {
+
+			                	pastDraggable = $(this).attr('pastDraggable');
+
+			                	if (parent.exam[id].sequence_matters == "true") {
+									var index = $( ".droppable" ).index($(this));
+										parent.exam[id].answer_id = $.map( parent.exam[id].answer_id, function( val, i ) {
+									    	if(val == pastDraggable) return "";
+									    	else return val;
+										});									
+				                } else {
+				                	parent.exam[id].answer_id=jQuery.grep(parent.exam[id].answer_id, function(value) {
+									  return value != pastDraggable;
+									});
+				                }
+
+			                    //Place past object into its original coordinate
+			                    $("#" + pastDraggable).animate({top:0,left:0}, "slow");
+			                }
+
+			                //Store the current draggable object
+			                $(this).attr('pastDraggable',currentDraggable);
+			                if (parent.exam[id].sequence_matters == "true") {
+			                	var index = $( ".droppable" ).index($(this));
+			                	parent.exam[id].answer_id = $.map( parent.exam[id].answer_id, function( val, i ) {
+								  if(i == index) return parseInt(currentDraggable);
+								  else return val;
+								});
+								//parent.exam[id].answer_id[$( ".droppable" ).index($(this))] = parseInt(currentDraggable);
+								//console.log(parent.exam[id]);
+			                } else {
+			                	parent.exam[id].answer_id.push(parseInt(currentDraggable));
+			                }
+							
+
+							
+				    	}
+				    }); 
+					parent.showiframe();
+
+					$(parent.exam[id].answer_id).each(function(i,v){
+						if (v!=null&&v!=""&&v!="null") {
+							snapToMiddle($('#'+v),$('.droppable').eq(i));
+							$('.droppable').eq(i).attr('pastDraggable',v);
+						}
+
+					});
+
+					//$('.droppable').css({"width":parseInt(width)+5,"height":parseInt(height)+5});
+					if(disabled=='true'){
+						$( ".draggable" ).draggable('disable');
+					}
+			    }
+			});
+		function snapToMiddle(dragger, target){
+			//console.log(target.offset().top);
+		    var topMove = target.offset().top + (target.outerHeight(true) - dragger.outerHeight(true)) / 2;
+		    var leftMove= target.offset().left + (target.outerWidth(true) - dragger.outerWidth(true)) / 2;
+		    dragger.offset({top:topMove,left:leftMove});
+		
+		}
+		// $('body').on('change','input',function(){
+
+		// 		parent.exam[id].answer_id = [];
+		// 		parent.exam[id].answer_id.push(parseInt($(this).attr('id')));
+
+			
+		// });
+  		</script>
+</html>
